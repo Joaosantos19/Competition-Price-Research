@@ -1,0 +1,68 @@
+from Functions import clean_float
+from Functions import clean_competition
+# ---------------------- Libraries and modules -------------------------------
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+import pandas as pd
+options = Options()
+#options.add_argument('--headless')
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+#import keyboard
+
+# chave_captcha = driver.find_element(By.ID, 'recaptcha').get_attribute('data-sitekey')
+# solver = recaptchaV2Proxyless()
+# solver.set_verbose(1)
+# solver.set_key('a7f9e83f860cf16c95cc034f8937cb6f')
+# solver.set_website_url('https://www.google.com/sorry/index?continue=https://www.google.com.br/search%3Fq%3D7896000614674%26sa%3DX%26biw%3D1036%26bih%3D516%26tbm%3Dshop%26ei%3DC2v2YsuILfnd5OUP84eVgAg%26ved%3D0ahUKEwiLuo_XyMH5AhX5LrkGHfNDBYAQ4dUDCAY%26uact%3D5%26oq%3D7896000614674%26gs_lcp%3DCgtwcm9kdWN0cy1jYxADSgQIQRgAUABYFGA1aABwAHgAgAEAiAEAkgEAmAEAoAEBwAEB%26sclient%3Dproducts-cc&q=EhAoBAGzcAPZd4g4mNrzR0mCGIzW2ZcGIhBVSyffR_RrLawEu3VA5owgMgFy')
+# solver.set_website_key(chave_captcha)
+# response = solver.solve_and_return_solution()
+# if response != 0:
+#     #g-recaptcha-response
+#     # document.getElementById('g-recaptcha-response').innerHTML = response
+#     driver.execute_script(f"document.getElementById('g-recaptcha-response').innerHTML = '{response}'")
+
+
+# ------------------------- Accessing the webpage with selenium -------------------------------
+path = r"C:\Users\joaov\OneDrive\Área de Trabalho\Hashtag Cursos\Curso Python Impressionador\25. Integração Python - Automação Web (Web-Scraping com Selenium)"
+Url_proj = "https://www.google.com.br/"
+driver.get(Url_proj)
+
+# ----------- Serarching the product:
+table = pd.read_excel(path + r'\Tabela Geral - Reajuste.xlsx')
+print(table)
+
+for i in range(len(table)):
+
+    try:
+        # searching for the product using its EAN:
+        driver.find_element(By.XPATH, '/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input').send_keys(str(table['EAN'][i]))
+        driver.find_element(By.XPATH, '/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input').send_keys(Keys.ENTER)
+
+        # Entering the shopping page of google:
+        driver.find_element(By.XPATH, '//*[@id="hdtb-msb"]/div[1]/div/div[5]/a').send_keys(Keys.ENTER)
+    except:
+        try:
+            # searching for the product using its EAN:
+            driver.find_element(By.XPATH, '//*[@id="tsf"]/div[1]/div[1]/div[2]/div/div[2]/input').clear()
+            driver.find_element(By.XPATH, '//*[@id="tsf"]/div[1]/div[1]/div[2]/div/div[2]/input').send_keys(str(table['EAN'][i]))
+            driver.find_element(By.XPATH, '//*[@id="tsf"]/div[1]/div[1]/div[2]/div/div[2]/input').send_keys(Keys.ENTER)
+        except:
+            driver.close()
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            driver.get(Url_proj)
+
+    # getting the price of the product
+    try:
+        table['Preco Concorrencia'][i] = clean_float(driver.find_element(By.XPATH, '//*[@id="rso"]/div/div[2]/div/div/div[1]/div[2]/div[2]/span/div[1]/a[1]/div[2]/span/span/span[1]/span').text)
+        table['Concorrencia'][i] = clean_competition(driver.find_element(By.XPATH, '//*[@id="rso"]/div/div[2]/div/div/div[1]/div[2]/div[2]/span/div[1]/a[1]/div[3]').text)
+    except:
+        pass
+    print(table['Preco Concorrencia'][i])
+
+# table.to_csv(path + '\Miudinho_Pesquisa.csv')
+# table.to_excel(path + '\Miudinho Mercado.xlsx')
+# print('Mal feito feito')
